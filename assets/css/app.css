@@ -9,16 +9,20 @@ html {
 *, *:before, *:after {
     box-sizing: inherit;
 }
-:root {}
+:root {
+    --primary: #F4F7F5;
+    --borders: #2f2c30;
+    --background: #08090A;
+}
 body {
-    color: #000;
+    color: var(--primary);
     font-size: 16px;
     font-family: sans-serif;
     font-weight: normal;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    background-color: #fff;
+    background-color: var(--background);
     padding: 0;
     margin: 0;
 }
@@ -28,4 +32,63 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+}
+.container .board {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 300px;
+    height: 300px;
+    padding: 20px;
+}
+@media(min-width: 400px) {
+    .container .board {
+        max-width: 400px;
+        height: 400px;
+    }
+}
+@media(min-width: 550px) {
+    .container .board {
+        max-width: 490px;
+        height: 490px;
+    }
+}
+@media(min-width: 960px) {
+    .container .board {
+        max-width: 600px;
+        height: 600px;
+    }
+}
+.container .board .square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-basis: 33.333333%;
+    height: 33.333333%;
+    border-width: 5px;
+    border-color: var(--borders);
+}
+.container .board .square:nth-child(1), .container .board .square:nth-child(2), .container .board .square:nth-child(3) {
+    border-bottom-style: solid;
+}
+.container .board .square:nth-child(7), .container .board .square:nth-child(8), .container .board .square:nth-child(9) {
+    border-top-style: solid;
+}
+.container .board .square:nth-child(1), .container .board .square:nth-child(4), .container .board .square:nth-child(7) {
+    border-right-style: solid;
+}
+.container .board .square:nth-child(3), .container .board .square:nth-child(6), .container .board .square:nth-child(9) {
+    border-left-style: solid;
+}
+.container .board .square span {
+    color: inherit;
+    font-size: 80px;
+    line-height: 80px;
+}
+@media(min-width: 550px) {
+    .container .board .square span {
+        font-size: 100px;
+        line-height: 100px;
+    }
 }
