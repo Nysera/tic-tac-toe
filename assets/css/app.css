@@ -85,6 +85,13 @@ body {
     color: inherit;
     font-size: 80px;
     line-height: 80px;
+    transform: scale(0.3);
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+.container .board .square span.visible {
+    transform: scale(1);
+    opacity: 1;
 }
 @media(min-width: 550px) {
     .container .board .square span {
