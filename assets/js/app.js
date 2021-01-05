@@ -11,7 +11,7 @@ const dom = (function() {
         if (marker === "o") {
             setTimeout(function(){
                 span.classList.add("visible");
-            }, 180);
+            }, 100);
         } else {
             span.classList.add("visible");
         }
@@ -38,15 +38,36 @@ const dom = (function() {
 })();
 
 const playerFactory = function(name, marker, type) {
+    const humanPlayer = function() {
+        const index = Array.from(event.currentTarget.parentNode.children).indexOf(event.currentTarget);
+        gameBoard.addMarker(index, marker);
+    };
+    const computerPlayer = function() {
+        const unfilteredChoices = gameBoard.getBoard().map(function(square, index) {
+            if (square.marker !== "") {
+                return false;
+            } else {
+                return index;
+            }
+        });
+        const filteredChoices = unfilteredChoices.filter(function(choice) {
+            return choice !== false;
+        });
+        const randomizeIndex = Math.floor(Math.random() * filteredChoices.length);
+        gameBoard.addMarker(filteredChoices[randomizeIndex], marker);
+    };
     const takeTurn = function() {
-        console.log({ name, marker, type });
-        if (name === "player1") {
-            const index = Array.from(event.currentTarget.parentNode.children).indexOf(event.currentTarget);
-            gameBoard.addMarker(index, marker);
+        if (name === "player1" || name === "player2" && type === "human") {
+            humanPlayer();
+        } else if (name === "player2" && type === "computer") {
+            computerPlayer();
         }
     };
 
     return {
+        name,
+        marker,
+        type,
         takeTurn
     };
 };
@@ -55,6 +76,9 @@ const gameBoard = (function() {
     let board = [];
     const square = {
         marker: ""
+    };
+    const getBoard = function() {
+        return board;
     };
     const addMarker = function(index, marker) {
         const getSquareDivFromIndex = Array.from(dom.squareSelector())[index];
@@ -71,13 +95,14 @@ const gameBoard = (function() {
     // public scope
     return {
         initializeBoard,
-        addMarker
+        addMarker,
+        getBoard
     };
 })();
 
 const game = (function() {
     const player1 = playerFactory("player1", "x", "human");
-    let player2 = playerFactory("player2", "o", "human");
+    let player2 = playerFactory("player2", "o", "computer");
     let isPlayer1Turn = true;
     let currentPlayer;
 
@@ -89,12 +114,28 @@ const game = (function() {
     const setPlayer = function() {
         isPlayer1Turn ? currentPlayer = player1 : currentPlayer = player2;
     };
-
+    const switchPlayer = function() {
+        isPlayer1Turn = !isPlayer1Turn;
+    };
     const addSquareEventListener = function() {
         dom.squareSelector().forEach(function(square){
             square.addEventListener("click", function(event){
+                const checkBoardForSpace = function() {
+                    return gameBoard.getBoard().some(function(square) {
+                        return square.marker === "";
+                    });
+                };
                 if (event.currentTarget.textContent === "") {
                     currentPlayer.takeTurn(event);
+                    switchPlayer();
+                    setPlayer();
+                    if (currentPlayer.name === "player2" && currentPlayer.type === "computer" && checkBoardForSpace()) {
+                        currentPlayer.takeTurn();
+                        switchPlayer();
+                        setPlayer();
+                    } else {
+                        return;
+                    }
                 }
             });
         });
