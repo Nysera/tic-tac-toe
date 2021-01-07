@@ -5,6 +5,25 @@ const dom = (function() {
     const squareSelector = function() {
         return cacheDom.boardContainer.querySelectorAll(".square");
     };
+    const toggleWinnerClasses = function(status, array) {
+        if (status === "win") {
+            if (!cacheDom.boardContainer.classList.contains("winner")) {
+                cacheDom.boardContainer.classList.add("winner");
+            } else {
+                cacheDom.boardContainer.classList.remove("winner");
+            }
+            array.forEach(function(square) {
+                const getElementFromIndex = Array.from(dom.squareSelector())[square.index];
+                getElementFromIndex.querySelector("span").classList.add("winner");
+            });
+        } else if (status === "tie") {
+            if (!cacheDom.boardContainer.classList.contains("tie")) {
+                cacheDom.boardContainer.classList.add("tie");
+            } else {
+                cacheDom.boardContainer.classList.remove("tie");
+            }
+        }
+    };
     const setMarker = function(el, marker) {
         const span = el.querySelector("span");
         span.innerHTML = marker;
@@ -22,7 +41,11 @@ const dom = (function() {
         square.innerHTML = "<span></span>";
         return square;
     };
+    const resetBoard = function() {
+        cacheDom.boardContainer.innerHTML = "";
+    };
     const render = function(board) {
+        resetBoard();
         board.forEach(function() {
             cacheDom.boardContainer.append(squareMarkup());
         });
@@ -33,12 +56,13 @@ const dom = (function() {
     return {
         render,
         squareSelector,
-        setMarker
+        setMarker,
+        toggleWinnerClasses,
     };
 })();
 
 const playerFactory = function(name, marker, type) {
-    const humanPlayer = function() {
+    const humanPlayer = function(event) {
         const index = Array.from(event.currentTarget.parentNode.children).indexOf(event.currentTarget);
         gameBoard.addMarker(index, marker);
     };
@@ -56,9 +80,9 @@ const playerFactory = function(name, marker, type) {
         const randomizeIndex = Math.floor(Math.random() * filteredChoices.length);
         gameBoard.addMarker(filteredChoices[randomizeIndex], marker);
     };
-    const takeTurn = function() {
+    const takeTurn = function(event) {
         if (name === "player1" || name === "player2" && type === "human") {
-            humanPlayer();
+            humanPlayer(event);
         } else if (name === "player2" && type === "computer") {
             computerPlayer();
         }
@@ -86,6 +110,7 @@ const gameBoard = (function() {
         dom.setMarker(getSquareDivFromIndex, marker);
     };
     const initializeBoard = function() {
+        board = [];
         for (let i = 0; i < 9; i++ ) {
             board.push(square);
         }
@@ -111,6 +136,10 @@ const game = (function() {
         setPlayer();
         addSquareEventListener();
     };
+    const resetGame = function() {
+        isPlayer1Turn = true;
+        startGame();
+    };
     const setPlayer = function() {
         isPlayer1Turn ? currentPlayer = player1 : currentPlayer = player2;
     };
@@ -119,26 +148,94 @@ const game = (function() {
     };
     const addSquareEventListener = function() {
         dom.squareSelector().forEach(function(square){
-            square.addEventListener("click", function(event){
-                const checkBoardForSpace = function() {
-                    return gameBoard.getBoard().some(function(square) {
-                        return square.marker === "";
-                    });
-                };
-                if (event.currentTarget.textContent === "") {
-                    currentPlayer.takeTurn(event);
-                    switchPlayer();
-                    setPlayer();
+            square.addEventListener("click", function(event) {
+                if (!winner()) {
+                    if (event.currentTarget.textContent === "") {
+                        currentPlayer.takeTurn(event);
+                        if (!winner()) {
+                            switchPlayer();
+                            setPlayer();
+                        }
+                    }
                     if (currentPlayer.name === "player2" && currentPlayer.type === "computer" && checkBoardForSpace()) {
                         currentPlayer.takeTurn();
-                        switchPlayer();
-                        setPlayer();
-                    } else {
-                        return;
+                        if (!winner()) {
+                            switchPlayer();
+                            setPlayer();
+                        }
                     }
+                } else {
+                    resetGame();
                 }
             });
         });
+    };
+    const checkBoardForSpace = function() {
+        return gameBoard.getBoard().some(function(square) {
+            return square.marker === "";
+        });
+    };
+    const winner = function() {
+        const board = gameBoard.getBoard();
+        const winConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        const checkForWinner = function() {
+            return winConditions.some(function(array) {
+                let filteredArray = [];
+                array.forEach(function(idx) {
+                    if (board[idx].marker !== "") {
+                        const addIndex = {
+                            marker: board[idx].marker,
+                            index: idx
+                        };
+                        filteredArray.push(addIndex);
+                    }
+                });
+                if (filteredArray.length === 3) {
+                    if (filteredArray.every(function(square) {
+                        return square.marker === "x";
+                    })) {
+                        console.log("X has won!");
+                        dom.toggleWinnerClasses("win", filteredArray);
+                        return true;
+
+                    } else if (filteredArray.every(function(square) {
+                        return square.marker === "o";
+                    })) {
+                        console.log("O has won!");
+                        dom.toggleWinnerClasses("win", filteredArray);
+                        return true;
+
+                    } else {
+                        return false;
+                    }
+                }
+            }); 
+        };
+        const checkForTie = function() {
+            return board.filter(function(square) {
+                return square.marker !== "";
+            }).length === 9;
+        };
+
+        if (checkForWinner() === true) {
+            return true;
+        } else if (checkForTie() === true) {
+            console.log("tie");
+            dom.toggleWinnerClasses("tie", null);
+            return true;
+        } else {
+            return false;
+        }
     };
 
 
