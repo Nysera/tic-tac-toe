@@ -93,6 +93,15 @@ body {
     transform: scale(1);
     opacity: 1;
 }
+.container .board.winner .square span {
+    opacity: 0.1;
+}
+.container .board .square span.winner {
+    opacity: 1;
+}
+.container .board.tie .square span {
+    opacity: 0.1;
+}
 @media(min-width: 550px) {
     .container .board .square span {
         font-size: 100px;
