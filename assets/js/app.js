@@ -2,7 +2,9 @@ const dom = (function() {
     const cacheDom = {
         boardContainer: document.querySelector(".board"),
         playerToggleBtn: document.querySelector("#player-toggle"),
-        player2ScoreContainer: document.querySelector("#computer")
+        player1ScoreContainer: document.querySelector("#player"),
+        player2ScoreContainer: document.querySelector("#computer"),
+        tieScoreContainer: document.querySelector("#tie")
     };
     const squareSelector = function() {
         return cacheDom.boardContainer.querySelectorAll(".square");
@@ -136,6 +138,9 @@ const game = (function() {
     let player2 = playerFactory("player2", "o", "computer");
     let isPlayer1Turn = true;
     let currentPlayer;
+    let player1Wins = 0;
+    let player2Wins = 0;
+    let ties = 0;
 
     const startGame = function() {
         gameBoard.initializeBoard();
@@ -160,12 +165,14 @@ const game = (function() {
             dom.cacheDom.playerToggleBtn.querySelector(".value").innerHTML = "2P";
             dom.cacheDom.player2ScoreContainer.querySelector(".title").innerHTML = "Player 2(<b>O</b>)"
             player2 = playerFactory("player2", "o", "human");
+            resetScoreboard();
             resetGame();
         } else {
             dom.cacheDom.playerToggleBtn.querySelector(".icon").innerHTML = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 16 16"><path d="M9 11.041v-0.825c1.102-0.621 2-2.168 2-3.716 0-2.485 0-4.5-3-4.5s-3 2.015-3 4.5c0 1.548 0.898 3.095 2 3.716v0.825c-3.392 0.277-6 1.944-6 3.959h14c0-2.015-2.608-3.682-6-3.959z"></path></svg>`;
             dom.cacheDom.playerToggleBtn.querySelector(".value").innerHTML = "1P";
             dom.cacheDom.player2ScoreContainer.querySelector(".title").innerHTML = "Computer(<b>O</b>)"
             player2 = playerFactory("player2", "o", "computer");
+            resetScoreboard();
             resetGame();
             dom.toggleWinnerClasses();
         }
@@ -173,19 +180,21 @@ const game = (function() {
     const addSquareEventListener = function() {
         dom.squareSelector().forEach(function(square){
             square.addEventListener("click", function(event) {
-                if (!winner()) {
-                    if (event.currentTarget.textContent === "") {
-                        currentPlayer.takeTurn(event);
-                        if (!winner()) {
-                            switchPlayer();
-                            setPlayer();
+                if (!dom.cacheDom.boardContainer.classList.contains("winner") && !dom.cacheDom.boardContainer.classList.contains("tie")) {
+                    if(!winner()) {
+                        if (event.currentTarget.textContent === "") {
+                            currentPlayer.takeTurn(event);
+                            if (!winner()) {
+                                switchPlayer();
+                                setPlayer();
+                            }
                         }
-                    }
-                    if (currentPlayer.name === "player2" && currentPlayer.type === "computer" && checkBoardForSpace()) {
-                        currentPlayer.takeTurn();
-                        if (!winner()) {
-                            switchPlayer();
-                            setPlayer();
+                        if (currentPlayer.name === "player2" && currentPlayer.type === "computer" && checkBoardForSpace()) {
+                            currentPlayer.takeTurn();
+                            if (!winner()) {
+                                switchPlayer();
+                                setPlayer();
+                            }
                         }
                     }
                 } else {
@@ -228,14 +237,14 @@ const game = (function() {
                     if (filteredArray.every(function(square) {
                         return square.marker === "x";
                     })) {
-                        console.log("X has won!");
+                        scoreboard("x");
                         dom.toggleWinnerClasses("win", filteredArray);
                         return true;
 
                     } else if (filteredArray.every(function(square) {
                         return square.marker === "o";
                     })) {
-                        console.log("O has won!");
+                        scoreboard("o");
                         dom.toggleWinnerClasses("win", filteredArray);
                         return true;
 
@@ -254,12 +263,32 @@ const game = (function() {
         if (checkForWinner() === true) {
             return true;
         } else if (checkForTie() === true) {
-            console.log("tie");
+            scoreboard("tie");
             dom.toggleWinnerClasses("tie", null);
             return true;
         } else {
             return false;
         }
+    };
+    const scoreboard = function(winner) {
+        if (winner === "x") {
+            player1Wins++;
+            dom.cacheDom.player1ScoreContainer.querySelector(".value").innerHTML = player1Wins;
+        } else if (winner === "o") {
+            player2Wins++;
+            dom.cacheDom.player2ScoreContainer.querySelector(".value").innerHTML = player2Wins;
+        } else if (winner === "tie") {
+            ties++;
+            dom.cacheDom.tieScoreContainer.querySelector(".value").innerHTML =  ties;
+        }
+    };
+    const resetScoreboard = function() {
+        player1Wins = 0;
+        player2Wins = 0;
+        ties = 0;
+        dom.cacheDom.player1ScoreContainer.querySelector(".value").innerHTML = "0";
+        dom.cacheDom.player2ScoreContainer.querySelector(".value").innerHTML = "0";
+        dom.cacheDom.tieScoreContainer.querySelector(".value").innerHTML = "0";
     };
 
 
